@@ -1,6 +1,6 @@
 # US States & Capitals Quiz
 
-Mobile-first quiz: match a US state outline to its capital.
+Responsive mobile quiz: name the capital of the highlighted US state.
 Play at https://xta.github.io/us-states-and-capitals-quiz/
 
 Static site, no build step. To run locally:
