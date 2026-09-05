@@ -107,8 +107,8 @@
   // ---------- confetti ----------
 
   var COLORS = ["#4f9cf9", "#34b37a", "#ffd166", "#ef6f8f", "#c084fc", "#ffffff"];
-  var CONFETTI_MS = 3400;
 
+  // Falls until the results screen is replaced — the canvas goes with it.
   function confetti() {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -118,44 +118,48 @@
     app.appendChild(canvas);
 
     var ctx = canvas.getContext("2d");
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var w = window.innerWidth, h = window.innerHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.scale(dpr, dpr);
+    var w = 0, h = 0;
 
-    var pieces = [];
-    for (var i = 0; i < 110; i++) {
-      pieces.push({
-        x: Math.random() * w,
-        y: -20 - Math.random() * h * 0.8,
-        vx: (Math.random() - 0.5) * 1.4,
-        vy: 1.6 + Math.random() * 2.4,
-        w: 5 + Math.random() * 5,
-        h: 8 + Math.random() * 6,
-        rot: Math.random() * Math.PI,
-        vr: (Math.random() - 0.5) * 0.22,
-        color: COLORS[(Math.random() * COLORS.length) | 0]
-      });
+    function fit() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    fit();
+
+    function spawn(p, atTop) {
+      p.x = Math.random() * w;
+      p.y = atTop ? -20 - Math.random() * 40 : -20 - Math.random() * h;
+      p.vx = (Math.random() - 0.5) * 1.4;
+      p.vy = 1.6 + Math.random() * 2.4;
+      p.w = 5 + Math.random() * 5;
+      p.h = 8 + Math.random() * 6;
+      p.rot = Math.random() * Math.PI;
+      p.vr = (Math.random() - 0.5) * 0.22;
+      p.color = COLORS[(Math.random() * COLORS.length) | 0];
+      return p;
     }
 
-    var start = 0;
-    function frame(now) {
+    var pieces = [];
+    for (var i = 0; i < 80; i++) pieces.push(spawn({}, false));
+
+    function frame() {
       // The screen was replaced (play again, home) — stop rather than animate
       // into a detached canvas.
       if (!canvas.isConnected) return;
-      if (!start) start = now;
-      var t = now - start;
+      if (window.innerWidth !== w || window.innerHeight !== h) fit();
 
       ctx.clearRect(0, 0, w, h);
-      ctx.globalAlpha = t > CONFETTI_MS - 800 ? Math.max(0, (CONFETTI_MS - t) / 800) : 1;
-
       for (var i = 0; i < pieces.length; i++) {
         var p = pieces[i];
         p.x += p.vx;
         p.y += p.vy;
         p.vy += 0.012;
         p.rot += p.vr;
+        if (p.y - p.h > h) spawn(p, true); // recycle to the top, so it keeps showering
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
@@ -163,9 +167,7 @@
         ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
         ctx.restore();
       }
-
-      if (t < CONFETTI_MS) requestAnimationFrame(frame);
-      else canvas.remove();
+      requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
   }
