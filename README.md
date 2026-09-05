@@ -1,9 +1,10 @@
 # US States & Capitals Quiz
 
-Responsive mobile quiz: name the capital of the highlighted US state.
+Select the capital of the US state quiz game
+
 Play at https://xta.github.io/us-states-and-capitals-quiz/
 
-Static site, no build step. To run locally:
+Run locally:
 
 ```sh
 python3 -m http.server 8000
