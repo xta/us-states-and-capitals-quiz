@@ -72,9 +72,9 @@ button {
 }
 .mode:active { transform: scale(.98); background: var(--card-2); }
 .mode .icon { font-size: 26px; width: 34px; text-align: center; flex: none; }
-.mode .label { flex: 1; min-width: 0; }
-.mode .title { font-weight: 600; font-size: 17px; }
-.mode .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.mode .label { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.mode .title { display: block; font-weight: 600; font-size: 17px; line-height: 1.25; }
+.mode .sub { display: block; color: var(--muted); font-size: 13px; line-height: 1.3; }
 .mode .chev { color: var(--muted); font-size: 20px; flex: none; }
 
 .best { text-align: center; color: var(--muted); font-size: 13px; min-height: 18px; }
