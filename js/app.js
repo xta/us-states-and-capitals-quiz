@@ -104,6 +104,72 @@
     svg.firstElementChild.setAttribute("d", s.d);
   }
 
+  // ---------- confetti ----------
+
+  var COLORS = ["#4f9cf9", "#34b37a", "#ffd166", "#ef6f8f", "#c084fc", "#ffffff"];
+  var CONFETTI_MS = 3400;
+
+  function confetti() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    var canvas = document.createElement("canvas");
+    canvas.className = "confetti";
+    canvas.setAttribute("aria-hidden", "true");
+    app.appendChild(canvas);
+
+    var ctx = canvas.getContext("2d");
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = window.innerWidth, h = window.innerHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+
+    var pieces = [];
+    for (var i = 0; i < 110; i++) {
+      pieces.push({
+        x: Math.random() * w,
+        y: -20 - Math.random() * h * 0.8,
+        vx: (Math.random() - 0.5) * 1.4,
+        vy: 1.6 + Math.random() * 2.4,
+        w: 5 + Math.random() * 5,
+        h: 8 + Math.random() * 6,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.22,
+        color: COLORS[(Math.random() * COLORS.length) | 0]
+      });
+    }
+
+    var start = 0;
+    function frame(now) {
+      // The screen was replaced (play again, home) — stop rather than animate
+      // into a detached canvas.
+      if (!canvas.isConnected) return;
+      if (!start) start = now;
+      var t = now - start;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalAlpha = t > CONFETTI_MS - 800 ? Math.max(0, (CONFETTI_MS - t) / 800) : 1;
+
+      for (var i = 0; i < pieces.length; i++) {
+        var p = pieces[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.012;
+        p.rot += p.vr;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+
+      if (t < CONFETTI_MS) requestAnimationFrame(frame);
+      else canvas.remove();
+    }
+    requestAnimationFrame(frame);
+  }
+
   // ---------- screens ----------
 
   function homeScreen() {
@@ -132,10 +198,10 @@
           }).join("") +
         "</div>" +
         '<div class="best">' + esc(bits.join(" · ")) + "</div>" +
-      "</div>" +
-      settingsMarkup();
+        settingsMarkup() +
+      "</div>";
 
-    app.className = "scrollable"; // the toggle sits past the first screenful
+    app.className = "scrollable"; // home may run past the viewport; the quiz may not
   }
 
   var ANSWER_HELP = {
@@ -301,7 +367,7 @@
 
   function resultsScreen(mode, result) {
     var conf = MODES[mode];
-    var headline, sub, emoji;
+    var headline, sub, emoji, perfect = false;
 
     if (conf.suddenDeath) {
       // A sudden-death run is scored by how far you got, not by a percentage.
@@ -321,6 +387,7 @@
       emoji = pct === 100 ? "🏆" : pct >= 80 ? "🎉" : pct >= 50 ? "👍" : "📚";
       headline = result.score + " of " + result.total;
       sub = pct + "% correct";
+      perfect = pct === 100;
     }
 
     app.className = "";
@@ -344,6 +411,8 @@
           '<button class="btn ghost" data-nav="home">Home</button>' +
         "</div>" +
       "</div>";
+
+    if (perfect) confetti();
   }
 
   // ---------- routing ----------
