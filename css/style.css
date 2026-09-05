@@ -23,7 +23,6 @@ html, body {
   font-size: 17px;
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
-  overscroll-behavior: none;
 }
 
 #app {
@@ -34,7 +33,6 @@ html, body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
 }
 
@@ -51,15 +49,15 @@ button {
 
 /* ---------- home ---------- */
 
-.home { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 28px; padding: 24px 0; }
+.home { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 20px; padding: 12px 0; }
 
 .hero { text-align: center; }
-.hero .map { width: 100%; max-width: 320px; max-height: 28vh; margin: 0 auto 18px; display: block; }
+.hero .map { width: 100%; max-width: 320px; max-height: min(23dvh, 200px); margin: 0 auto 14px; display: block; }
 .hero .map path.nation { fill: var(--card-2); stroke: var(--line); stroke-width: 1; }
 .hero h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.02em; }
 .hero p { margin: 0; color: var(--muted); font-size: 15px; }
 
-.modes { display: flex; flex-direction: column; gap: 12px; }
+.modes { display: flex; flex-direction: column; gap: 10px; }
 
 .mode {
   display: flex;
