@@ -7,8 +7,8 @@
 
   var MODES = {
     quick:     { title: "Quick Quiz", sub: "10 random states",           icon: "⚡",  length: 10 },
-    all:       { title: "All 50",     sub: "Every state, shuffled",      icon: "🎯", length: 50 },
-    endless:   { title: "Endless",    sub: "Keeps going until you stop", icon: "♾️", length: Infinity, streak: true },
+    all:       { title: "All 50",     sub: "All 50 states",              icon: "🎯", length: 50 },
+    endless:   { title: "Endless",    sub: "Keeps on going and going",  icon: "♾️", length: Infinity, streak: true },
     challenge: { title: "Challenge",  sub: "One wrong answer and you’re done", icon: "🔥", length: Infinity, streak: true, suddenDeath: true }
   };
 
