@@ -6,9 +6,10 @@
   var app = document.getElementById("app");
 
   var MODES = {
-    quick:   { title: "Quick Quiz",  sub: "10 random states",     icon: "⚡", length: 10 },
-    all:     { title: "All 50",      sub: "Every state, shuffled", icon: "🎯", length: 50 },
-    endless: { title: "Endless",     sub: "Keeps going until you stop", icon: "♾️", length: Infinity }
+    quick:     { title: "Quick Quiz", sub: "10 random states",           icon: "⚡",  length: 10 },
+    all:       { title: "All 50",     sub: "Every state, shuffled",      icon: "🎯", length: 50 },
+    endless:   { title: "Endless",    sub: "Keeps going until you stop", icon: "♾️", length: Infinity, streak: true },
+    challenge: { title: "Challenge",  sub: "One wrong answer ends it",   icon: "🔥", length: Infinity, streak: true, suddenDeath: true }
   };
 
   var CHOICES = 4;
@@ -96,11 +97,11 @@
   // ---------- screens ----------
 
   function homeScreen() {
-    var bestQuick = store("best.quick");
-    var bestEndless = store("best.endless");
     var bits = [];
-    if (bestQuick) bits.push("Best quick quiz: " + bestQuick + "/10");
-    if (bestEndless) bits.push("Longest streak: " + bestEndless);
+    if (store("best.quick")) bits.push("Quick " + store("best.quick") + "/10");
+    if (store("best.endless")) bits.push("Endless " + store("best.endless"));
+    if (store("best.challenge")) bits.push("Challenge " + store("best.challenge"));
+    if (bits.length) bits.unshift("Best");
 
     app.innerHTML =
       '<div class="home">' +
@@ -108,7 +109,7 @@
           '<svg class="map" viewBox="0 0 ' + SHAPES.w + " " + SHAPES.h + '" aria-hidden="true">' +
             '<path class="nation" d="' + SHAPES.nation + '"/></svg>' +
           "<h1>States &amp; Capitals</h1>" +
-          "<p>Name the capital from the state outline.</p>" +
+          "<p>Name the capital of the highlighted state.</p>" +
         "</div>" +
         '<div class="modes">' +
           Object.keys(MODES).map(function (key) {
@@ -156,7 +157,7 @@
     var elAnswers = app.querySelector(".answers");
 
     function current() {
-      if (mode === "endless") {
+      if (conf.length === Infinity) {
         while (questions.length <= index) questions.push(nextFromBag());
       }
       return questions[index];
@@ -168,7 +169,7 @@
       highlight(elShape, name);
       elName.textContent = name;
 
-      if (mode === "endless") {
+      if (conf.streak) {
         elCount.textContent = "Question " + (index + 1);
         elScore.innerHTML = "streak <b>" + streak + "</b>";
         elBar.style.width = "100%";
@@ -188,7 +189,7 @@
       clearTimeout(timer);
       timer = null;
       index++;
-      if (mode !== "endless" && index >= conf.length) {
+      if (conf.length !== Infinity && index >= conf.length) {
         resultsScreen(mode, { score: score, total: conf.length, misses: misses });
       } else {
         render();
@@ -219,15 +220,25 @@
         else btn.classList.add("faded");
       });
 
-      if (mode === "endless") {
+      if (conf.streak) {
         elScore.innerHTML = "streak <b>" + streak + "</b>";
-        if (!correct) {
+        if (!correct && mode === "endless") {
           var prevBest = parseInt(store("best.endless") || "0", 10);
           if (best > prevBest) store("best.endless", String(best));
         }
       } else {
         elScore.innerHTML = "<b>" + score + "</b>/" + (index + 1);
         elBar.style.width = ((index + 1) / conf.length) * 100 + "%";
+      }
+
+      if (conf.suddenDeath && !correct) {
+        // The run is over; hold on the reveal a moment, then show the score.
+        timer = setTimeout(function () {
+          clearTimeout(timer);
+          timer = null;
+          resultsScreen(mode, { score: score, total: index + 1, misses: misses });
+        }, REVEAL_MS + 550);
+        return;
       }
 
       // A wrong answer lingers a beat longer so the right one registers.
@@ -252,23 +263,38 @@
   }
 
   function resultsScreen(mode, result) {
-    var pct = Math.round((result.score / result.total) * 100);
-    var emoji = pct === 100 ? "🏆" : pct >= 80 ? "🎉" : pct >= 50 ? "👍" : "📚";
+    var conf = MODES[mode];
+    var headline, sub, emoji;
 
-    if (mode === "quick") {
-      var prev = parseInt(store("best.quick") || "0", 10);
-      if (result.score > prev) store("best.quick", String(result.score));
+    if (conf.suddenDeath) {
+      // A sudden-death run is scored by how far you got, not by a percentage.
+      var prevRun = parseInt(store("best.challenge") || "0", 10);
+      var isBest = result.score > prevRun;
+      if (isBest) store("best.challenge", String(result.score));
+
+      emoji = result.score >= 25 ? "🏆" : result.score >= 15 ? "🎉" : result.score >= 7 ? "👍" : "📚";
+      headline = result.score + (result.score === 1 ? " state" : " states") + " in a row";
+      sub = isBest && result.score > 0 ? "New personal best" : "Best run: " + Math.max(prevRun, result.score);
+    } else {
+      var pct = Math.round((result.score / result.total) * 100);
+      if (mode === "quick") {
+        var prev = parseInt(store("best.quick") || "0", 10);
+        if (result.score > prev) store("best.quick", String(result.score));
+      }
+      emoji = pct === 100 ? "🏆" : pct >= 80 ? "🎉" : pct >= 50 ? "👍" : "📚";
+      headline = result.score + " of " + result.total;
+      sub = pct + "% correct";
     }
 
     app.innerHTML =
       '<div class="results">' +
         '<div class="headline">' +
           '<div class="emoji">' + emoji + "</div>" +
-          "<h2>" + result.score + " of " + result.total + "</h2>" +
-          '<div class="pct">' + pct + "% correct</div>" +
+          "<h2>" + esc(headline) + "</h2>" +
+          '<div class="pct">' + esc(sub) + "</div>" +
         "</div>" +
         (result.misses.length
-          ? '<div class="review"><h3>Review</h3>' +
+          ? '<div class="review"><h3>' + (conf.suddenDeath ? "Ended on" : "Review") + "</h3>" +
             result.misses.map(function (m) {
               return '<div class="miss"><span class="st">' + esc(m.state) + "</span>" +
                 '<span class="cap">' + esc(m.capital) + "</span>" +
