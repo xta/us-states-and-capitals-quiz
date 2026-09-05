@@ -58,20 +58,39 @@
 
   // ---------- svg ----------
 
-  function outlineSVG(name) {
-    var s = SHAPES.states[name];
-    var x0 = s.b[0], y0 = s.b[1], x1 = s.b[2], y1 = s.b[3];
-    var w = Math.max(x1 - x0, 0.1), h = Math.max(y1 - y0, 0.1);
-    var pad = Math.max(w, h) * 0.06 + 1;
-    var vb = (x0 - pad) + " " + (y0 - pad) + " " + (w + pad * 2) + " " + (h + pad * 2);
-    return '<svg class="shape" viewBox="' + vb + '" role="img" aria-label="Outline of ' + esc(name) + '">' +
-           '<path d="' + s.d + '"/></svg>';
+  // The map is built once per quiz and then re-used: only the highlight moves.
+  function mapMarkup() {
+    var paths = Object.keys(SHAPES.states).map(function (name) {
+      return '<path data-s="' + esc(name) + '" d="' + SHAPES.states[name].d + '"/>';
+    }).join("");
+    return '<svg class="usmap" viewBox="0 0 ' + SHAPES.w + " " + SHAPES.h + '" role="img">' +
+             '<g class="all">' + paths + "</g></svg>" +
+           '<div class="detail"><svg viewBox="0 0 1 1" aria-hidden="true"><path d=""/></svg></div>';
   }
 
-  function locatorSVG(name) {
-    return '<svg class="locator" viewBox="0 0 ' + SHAPES.w + " " + SHAPES.h + '" aria-hidden="true">' +
-           '<path class="nation" d="' + SHAPES.nation + '"/>' +
-           '<path class="here" d="' + SHAPES.states[name].d + '"/></svg>';
+  function highlight(wrap, name) {
+    var group = wrap.querySelector(".usmap .all");
+    var prev = group.querySelector(".here");
+    if (prev) prev.classList.remove("here");
+
+    var el = group.querySelector('[data-s="' + name + '"]');
+    group.appendChild(el); // paint the highlighted state above its neighbours
+    el.classList.add("here");
+    wrap.querySelector(".usmap")
+        .setAttribute("aria-label", name + " highlighted on a map of the United States");
+
+    // Inset: the same path, zoomed to its own bounds, so small states stay readable.
+    var s = SHAPES.states[name];
+    var x0 = s.b[0], y0 = s.b[1];
+    var w = Math.max(s.b[2] - x0, 0.1), h = Math.max(s.b[3] - y0, 0.1);
+    var pad = Math.max(w, h) * 0.08 + 1;
+    var box = wrap.querySelector(".detail");
+    var cx = (s.b[0] + s.b[2]) / 2, cy = (s.b[1] + s.b[3]) / 2;
+    box.className = "detail " + (cy < SHAPES.h / 2 ? "b" : "t") + (cx < SHAPES.w / 2 ? "r" : "l");
+
+    var svg = box.querySelector("svg");
+    svg.setAttribute("viewBox", (x0 - pad) + " " + (y0 - pad) + " " + (w + pad * 2) + " " + (h + pad * 2));
+    svg.firstElementChild.setAttribute("d", s.d);
   }
 
   // ---------- screens ----------
@@ -129,6 +148,7 @@
       "</div>";
 
     var elShape = app.querySelector(".shape-wrap");
+    elShape.innerHTML = mapMarkup();
     var elName = app.querySelector(".state-name");
     var elCount = app.querySelector(".count");
     var elScore = app.querySelector(".score");
@@ -145,7 +165,7 @@
     function render() {
       var q = current();
       var name = q.state.name;
-      elShape.innerHTML = outlineSVG(name) + locatorSVG(name);
+      highlight(elShape, name);
       elName.textContent = name;
 
       if (mode === "endless") {

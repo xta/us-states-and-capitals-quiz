@@ -27,11 +27,14 @@ html, body {
 }
 
 #app {
-  min-height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 560px; /* shorter than this, let the page scroll rather than squash */
   max-width: 480px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
 }
 
@@ -48,10 +51,10 @@ button {
 
 /* ---------- home ---------- */
 
-.home { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 28px; padding: 24px 0; }
+.home { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 28px; padding: 24px 0; }
 
 .hero { text-align: center; }
-.hero .map { width: 100%; max-width: 320px; margin: 0 auto 18px; display: block; }
+.hero .map { width: 100%; max-width: 320px; max-height: 28vh; margin: 0 auto 18px; display: block; }
 .hero .map path.nation { fill: var(--card-2); stroke: var(--line); stroke-width: 1; }
 .hero h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.02em; }
 .hero p { margin: 0; color: var(--muted); font-size: 15px; }
@@ -92,27 +95,59 @@ button {
 
 /* ---------- question ---------- */
 
-.quiz { flex: 1; display: flex; flex-direction: column; }
+.quiz { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
-.stage { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; padding: 12px 0; min-height: 0; }
+.stage { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; padding: 8px 0; min-height: 0; }
 
-.shape-wrap { position: relative; width: 100%; flex: 1; min-height: 130px; display: flex; align-items: center; justify-content: center; }
-.shape { width: 100%; height: 100%; overflow: visible; }
-.shape path {
-  fill: var(--accent);
-  stroke: #9dc7ff;
-  stroke-width: 1.5;
+.shape-wrap {
+  position: relative;
+  flex: 0 1 auto;
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  aspect-ratio: 8 / 5;
+  max-height: 46dvh;
+}
+.usmap { width: 100%; height: 100%; display: block; }
+.usmap path {
+  fill: var(--card-2);
+  stroke: var(--line);
+  stroke-width: 1;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 6px 14px rgba(79,156,249,.28));
+}
+.usmap path.here {
+  fill: var(--accent);
+  stroke: #cfe4ff;
+  stroke-width: 1.5;
 }
 
-.locator { position: absolute; right: 0; bottom: 0; width: 86px; opacity: .9; }
-.locator path.nation { fill: var(--card-2); stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.locator path.here { fill: var(--accent); stroke: none; }
+.detail {
+  position: absolute;
+  width: 76px;
+  height: 76px;
+  padding: 8px;
+  background: rgba(14, 17, 23, .88);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+/* The inset moves to whichever corner is furthest from the highlighted state,
+   so it never sits on top of the answer. */
+.detail.t { top: 0; }
+.detail.b { bottom: 0; }
+.detail.l { left: 16px; }
+.detail.r { right: 16px; }
+
+.detail svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.detail path {
+  fill: var(--accent);
+  stroke: #cfe4ff;
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
 
 .state-name { font-size: 27px; font-weight: 700; letter-spacing: -0.02em; text-align: center; }
-.prompt { color: var(--muted); font-size: 14px; text-align: center; margin-top: -6px; }
+.prompt { color: var(--muted); font-size: 14px; text-align: center; margin-top: -10px; }
 
 /* ---------- answers ---------- */
 
@@ -120,7 +155,7 @@ button {
 
 .answer {
   width: 100%;
-  padding: 15px 16px;
+  padding: 17px 16px;
   background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: var(--radius);
@@ -137,16 +172,19 @@ button {
 
 /* ---------- results ---------- */
 
-.results { flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 20px 0; }
-.results .headline { text-align: center; }
+.results { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 20px; padding: 20px 0; }
+.results .headline { text-align: center; flex: none; }
 .results .emoji { font-size: 46px; }
 .results h2 { margin: 6px 0 4px; font-size: 26px; letter-spacing: -0.02em; }
 .results .pct { color: var(--muted); font-size: 15px; }
 .results .note { color: var(--muted); font-size: 13px; text-align: center; }
 
-.review { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.review h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 2px; font-weight: 600; }
+.review { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); }
+.review h3 { position: sticky; top: 0; background: var(--bg); padding-bottom: 6px; z-index: 1; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 2px; font-weight: 600; }
 .miss {
+  flex: none;
   display: flex; align-items: baseline; gap: 8px;
   padding: 11px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 11px; font-size: 15px;
 }
@@ -154,7 +192,7 @@ button {
 .miss .cap { color: var(--ok); }
 .miss .gave { color: var(--muted); text-decoration: line-through; font-size: 13px; }
 
-.actions { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+.actions { flex: none; display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding-top: 4px; }
 .btn {
   width: 100%; padding: 16px; border-radius: var(--radius); font-size: 17px; font-weight: 600; text-align: center;
   transition: transform .1s ease, opacity .15s ease;
