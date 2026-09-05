@@ -13,6 +13,8 @@
   /* Horizontal rhythm follows the width, vertical rhythm follows the height,
      so the layout gives way on a short screen as readily as on a narrow one. */
   --pad-x: clamp(12px, 4vw, 20px);
+  --pad-top: max(10px, env(safe-area-inset-top));
+  --pad-bottom: max(12px, env(safe-area-inset-bottom));
   --fs-body: clamp(15px, 4.2vw, 17px);
   --fs-small: clamp(12px, 3.4vw, 14px);
   --fs-tiny: clamp(11px, 3.1vw, 13px);
@@ -34,13 +36,20 @@ html, body {
 
 #app {
   height: 100vh;
-  height: 100dvh;
-  min-height: 480px; /* the floor: below this the page scrolls rather than squash */
+  height: max(480px, 100dvh); /* the floor: below 480px the page scrolls rather than squash */
   max-width: 480px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  padding: max(10px, env(safe-area-inset-top)) var(--pad-x) max(12px, env(safe-area-inset-bottom));
+  padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+}
+
+/* The home screen carries the settings block below the fold, so it is the one
+   screen allowed to run past the viewport. */
+#app.scrollable { height: auto; min-height: max(480px, 100dvh); }
+#app.scrollable .home {
+  flex: 1 0 auto;
+  min-height: calc(max(480px, 100dvh) - var(--pad-top) - var(--pad-bottom));
 }
 
 button {
@@ -100,6 +109,49 @@ button {
 .mode .chev { color: var(--muted); font-size: 20px; flex: none; }
 
 .best { text-align: center; color: var(--muted); font-size: var(--fs-tiny); min-height: 1.2em; }
+
+/* ---------- settings (below the fold on home) ---------- */
+
+.settings {
+  flex: none;
+  padding: clamp(20px, 5dvh, 40px) 0 clamp(4px, 1dvh, 12px);
+  text-align: center;
+}
+.settings-head {
+  font-size: var(--fs-tiny);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 3px);
+}
+.seg {
+  flex: 1;
+  padding: clamp(9px, 1.6dvh, 13px) 10px;
+  border-radius: var(--radius);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--muted);
+  transition: background .15s ease, color .15s ease;
+}
+.seg.is-on { background: var(--accent); color: #06213f; }
+
+.settings-help {
+  margin: 10px 2px 0;
+  color: var(--muted);
+  font-size: var(--fs-tiny);
+  line-height: 1.45;
+  text-align: center;
+}
 
 /* ---------- quiz chrome ---------- */
 
@@ -253,7 +305,9 @@ button {
    portrait layout scroll. */
 
 @media (orientation: landscape) and (max-height: 560px) {
-  #app { min-height: 320px; max-width: 820px; }
+  #app { height: max(320px, 100dvh); max-width: 820px; }
+  #app.scrollable { height: auto; min-height: max(320px, 100dvh); }
+  #app.scrollable .home { min-height: calc(max(320px, 100dvh) - var(--pad-top) - var(--pad-bottom)); }
 
   .home {
     display: grid;
@@ -262,6 +316,7 @@ button {
     column-gap: clamp(16px, 4vw, 32px);
   }
   .hero .map { max-height: clamp(80px, 26dvh, 160px); }
+  .settings { grid-column: 1 / -1; }
 
   .quiz {
     display: grid;

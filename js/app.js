@@ -39,21 +39,31 @@
     return null;
   }
 
+  function answerMode() {
+    return store("answers") === "cities" ? "cities" : "capitals";
+  }
+
   // ---------- questions ----------
 
-  function makeQuestion(state) {
-    var pool = shuffle(STATES.filter(function (s) { return s.capital !== state.capital; }))
-      .slice(0, CHOICES - 1)
-      .map(function (s) { return s.capital; });
+  function makeQuestion(state, answers) {
+    var pool;
+    if (answers === "cities") {
+      // Other cities in the same state, so elimination by region does not help.
+      pool = shuffle(state.cities.slice()).slice(0, CHOICES - 1);
+    } else {
+      pool = shuffle(STATES.filter(function (s) { return s.capital !== state.capital; }))
+        .slice(0, CHOICES - 1)
+        .map(function (s) { return s.capital; });
+    }
     return { state: state, choices: shuffle(pool.concat(state.capital)) };
   }
 
   // Endless draws from a reshuffled bag so states cycle without immediate repeats.
-  function makeBag() {
+  function makeBag(answers) {
     var bag = [];
     return function next() {
       if (!bag.length) bag = shuffle(STATES.slice());
-      return makeQuestion(bag.pop());
+      return makeQuestion(bag.pop(), answers);
     };
   }
 
@@ -122,16 +132,43 @@
           }).join("") +
         "</div>" +
         '<div class="best">' + esc(bits.join(" · ")) + "</div>" +
-      "</div>";
+      "</div>" +
+      settingsMarkup();
+
+    app.className = "scrollable"; // the toggle sits past the first screenful
+  }
+
+  var ANSWER_HELP = {
+    capitals: "Four capitals from around the country.",
+    cities: "The capital mixed with three other cities from the same state — harder, since you cannot rule answers out by region."
+  };
+
+  function settingsMarkup() {
+    var current = answerMode();
+    return '<div class="settings">' +
+      '<div class="settings-head">Answer choices</div>' +
+      '<div class="segmented" role="radiogroup" aria-label="Answer choices">' +
+        ["capitals", "cities"].map(function (key) {
+          var on = key === current;
+          return '<button class="seg' + (on ? " is-on" : "") + '" role="radio" ' +
+            'aria-checked="' + on + '" data-answers="' + key + '">' +
+            (key === "capitals" ? "Capitals" : "Cities") + "</button>";
+        }).join("") +
+      "</div>" +
+      '<p class="settings-help">' + esc(ANSWER_HELP[current]) + "</p>" +
+    "</div>";
   }
 
   function quizScreen(mode) {
     var conf = MODES[mode];
-    var nextFromBag = makeBag();
-    var questions = conf.length === Infinity ? [] : shuffle(STATES.slice()).slice(0, conf.length).map(makeQuestion);
+    var answers = answerMode();
+    var nextFromBag = makeBag(answers);
+    var questions = conf.length === Infinity ? [] : shuffle(STATES.slice()).slice(0, conf.length)
+      .map(function (st) { return makeQuestion(st, answers); });
     var index = 0, score = 0, streak = 0, best = 0, locked = false, timer = null;
     var misses = [];
 
+    app.className = "";
     app.innerHTML =
       '<div class="quiz">' +
         '<div class="bar">' +
@@ -286,6 +323,7 @@
       sub = pct + "% correct";
     }
 
+    app.className = "";
     app.innerHTML =
       '<div class="results">' +
         '<div class="headline">' +
@@ -326,6 +364,15 @@
       else location.hash = to;
       return;
     }
+    var seg = e.target.closest("[data-answers]");
+    if (seg) {
+      var y = window.scrollY;
+      store("answers", seg.dataset.answers);
+      homeScreen();
+      window.scrollTo(0, y);
+      return;
+    }
+
     if (e.target.closest('[data-nav="home"]')) location.hash = "#/";
   });
 
