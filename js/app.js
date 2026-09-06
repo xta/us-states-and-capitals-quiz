@@ -195,7 +195,7 @@
       '<div class="home">' +
         '<div class="hero">' +
           '<svg class="map" viewBox="0 0 ' + SHAPES.w + " " + SHAPES.h + '" aria-hidden="true">' +
-            '<path class="nation" d="' + SHAPES.nation + '"/></svg>' +
+            statePaths() + "</svg>" +
           "<h1>States &amp; Capitals</h1>" +
           "<p>Name the capital of the highlighted state.</p>" +
         "</div>" +
