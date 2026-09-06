@@ -8,7 +8,6 @@
   var MODES = {
     quick:     { title: "Quick Quiz", sub: "10 random states",           icon: "⚡",  length: 10 },
     all:       { title: "All 50",     sub: "All 50 states",              icon: "🎯", length: 50 },
-    endless:   { title: "Endless",    sub: "Keeps on going and going",  icon: "♾️", length: Infinity, streak: true },
     challenge: { title: "Challenge",  sub: "One wrong answer and you’re done", icon: "🔥", length: Infinity, streak: true, suddenDeath: true },
     advanced:  { title: "Advanced Quiz", sub: "Zoomed-in region — name the state, then its capital", icon: "🎓", length: 10, pair: true }
   };
@@ -59,7 +58,7 @@
     return { state: state, choices: shuffle(pool.concat(state.capital)) };
   }
 
-  // Endless draws from a reshuffled bag so states cycle without immediate repeats.
+  // Challenge draws from a reshuffled bag so states cycle without immediate repeats.
   function makeBag(answers) {
     var bag = [];
     return function next() {
@@ -186,7 +185,6 @@
   function homeScreen() {
     var bits = [];
     if (store("best.quick")) bits.push("Quick " + store("best.quick") + "/10");
-    if (store("best.endless")) bits.push("Endless " + store("best.endless"));
     if (store("best.challenge")) bits.push("Challenge " + store("best.challenge"));
     if (store("best.advanced")) bits.push("Advanced " + store("best.advanced") + "/20");
     if (bits.length) bits.unshift("Best");
@@ -243,7 +241,7 @@
     var nextFromBag = makeBag(answers);
     var questions = conf.length === Infinity ? [] : shuffle(STATES.slice()).slice(0, conf.length)
       .map(function (st) { return makeQuestion(st, answers); });
-    var index = 0, score = 0, streak = 0, best = 0, locked = false, timer = null;
+    var index = 0, score = 0, streak = 0, locked = false, timer = null;
     var misses = [];
 
     app.className = "";
@@ -321,7 +319,6 @@
       if (correct) {
         score++;
         streak++;
-        if (streak > best) best = streak;
       } else {
         misses.push({ state: q.state.name, capital: right, gave: picked });
         streak = 0;
@@ -337,10 +334,6 @@
 
       if (conf.streak) {
         elScore.innerHTML = "streak <b>" + streak + "</b>";
-        if (!correct && mode === "endless") {
-          var prevBest = parseInt(store("best.endless") || "0", 10);
-          if (best > prevBest) store("best.endless", String(best));
-        }
       } else {
         elScore.innerHTML = "<b>" + score + "</b>/" + (index + 1);
         elBar.style.width = ((index + 1) / conf.length) * 100 + "%";
