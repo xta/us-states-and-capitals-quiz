@@ -8,7 +8,7 @@
   var MODES = {
     quick:     { title: "Quick Quiz", sub: "10 random states",           icon: "⚡",  length: 10 },
     all:       { title: "All 50",     sub: "All 50 states",              icon: "🎯", length: 50 },
-    challenge: { title: "Challenge",  sub: "One wrong answer and you’re done", icon: "🔥", length: Infinity, streak: true, suddenDeath: true },
+    challenge: { title: "Challenge",  sub: "Keep the streak going", icon: "🔥", length: Infinity, streak: true, suddenDeath: true },
     advanced:  { title: "Advanced", sub: "Identify the state and capital", icon: "🎓", length: 10, pair: true }
   };
 
