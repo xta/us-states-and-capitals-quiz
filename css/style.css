@@ -250,6 +250,63 @@ button {
 
 .confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
 
+/* ---------- advanced ---------- */
+
+.quiz.adv {
+  display: flex;
+  flex: none;
+  gap: clamp(12px, 2dvh, 18px);
+  padding-bottom: clamp(8px, 2dvh, 16px);
+}
+
+/* A framed snapshot of one region, sized so it never crowds out the questions. */
+.adv .region {
+  width: min(100%, calc(40dvh * 5 / 4));
+  margin: 0 auto;
+  aspect-ratio: 5 / 4;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* Alaska and Hawaii are shown with nothing else in the frame. */
+.usmap.solo path:not(.here) { display: none; }
+
+.adv-q { display: flex; flex-direction: column; gap: clamp(7px, 1.3dvh, 11px); }
+
+.q-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--muted);
+}
+.q-num {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: var(--fs-tiny);
+}
+
+.adv .answers { padding-top: 0; }
+.adv .answer { padding: clamp(10px, 1.7dvh, 15px) 12px; }
+.adv .answer.picked { border-color: var(--accent); background: var(--card-2); }
+
+/* Advanced review rows carry a line per part that went wrong. */
+.miss.pair { flex-direction: column; align-items: stretch; gap: 5px; }
+.miss.pair .part { display: flex; align-items: baseline; gap: 8px; font-size: var(--fs-tiny); }
+.miss.pair .k { flex: none; width: 50px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.miss.pair .cap { flex: 1; }
+
 /* ---------- results ---------- */
 
 .results { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: clamp(12px, 2.2dvh, 20px); padding: clamp(10px, 2dvh, 20px) 0; }
@@ -315,7 +372,7 @@ button {
   .hero .map { max-height: clamp(80px, 26dvh, 160px); }
   .settings { grid-column: 1 / -1; }
 
-  .quiz {
+  .quiz:not(.adv) {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto 1fr;
@@ -323,10 +380,16 @@ button {
   }
   .bar, .progress { grid-column: 1 / -1; }
   .stage { grid-column: 1; grid-row: 3; padding: 0; }
-  .answers { grid-column: 2; grid-row: 3; align-self: center; padding-top: 0; }
+  .quiz:not(.adv) .answers { grid-column: 2; grid-row: 3; align-self: center; padding-top: 0; }
   .shape-wrap { width: 100%; margin: 0; max-height: none; }
   .detail.l { left: 0; }
   .detail.r { right: 0; }
+
+  /* Advanced keeps its map beside the questions and scrolls as one page. */
+  .quiz.adv { display: grid; grid-template-columns: 1fr 1fr; column-gap: clamp(14px, 3vw, 28px); }
+  .adv .bar, .adv .progress { grid-column: 1 / -1; }
+  .adv .region { grid-column: 1; align-self: start; width: 100%; }
+  .adv-q { grid-column: 2; }
 
   .results { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr; column-gap: clamp(16px, 4vw, 32px); }
   .results .headline { grid-column: 1; grid-row: 1 / -1; align-self: center; margin-top: 0; }
