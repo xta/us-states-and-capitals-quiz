@@ -215,8 +215,8 @@
   }
 
   var ANSWER_HELP = {
-    capitals: "Four capitals from around the country.",
-    cities: "The capital mixed with three other cities from the same state — harder, since you cannot rule answers out by region."
+    capitals: "State capitals",
+    cities: "Cities in the state"
   };
 
   function settingsMarkup() {
